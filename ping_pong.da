@@ -1,0 +1,36 @@
+import sys
+from random import randint
+
+class Ping(process):
+    def setup(ponger):
+        self.num_rounds = randint(1, 20)
+
+    def run():
+        output('Number of Rounds:', num_rounds)
+        for rnd in range(1, self.num_rounds + 1):
+            send(('ping', rnd, self.id), to = self.ponger)
+            await(some(received(('pong', _rnd, p)), has = (p in self.ponger)))
+        send(('done', self.id), to = self.ponger)
+        output('##########:', self.id, 'done')
+
+    def receive(msg=('pong', rnd, ong), from_ = ponger):
+        output('PONG:', rnd, 'from:', ponger)
+
+class Pong(process):
+    def setup(pinger):
+        pass
+
+    def run():
+        await(some(received(('done', p)), has = (p in self.pinger)))
+
+    def receive(msg=('ping', rnd, ing), from_ = pinger):
+        output('PING:', rnd, 'from:', pinger)
+        send(('pong', rnd, self.id), to = pinger)
+
+def main():
+    ing = new(Ping, num = 1)
+    ong = new(Pong, num = 1)
+    setup(ing, (ong, ))
+    setup(ong, (ing, ))
+    start(ong)
+    start(ing)

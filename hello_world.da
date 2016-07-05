@@ -1,0 +1,27 @@
+import sys
+
+#Hello World
+#DistAlgo Tutorial
+
+class P (process):
+    def setup(s):
+        pass
+
+    def run():
+        #say hello to the entire world
+        for p in self.s:
+            send(('hello', self.id), to = s)
+        #wait for everyone in the world to say hello to me
+        await(each(p in self.s, has = received(('hello', p))))
+        output('#############:', self.id, 'done')
+
+    def receive(msg=('hello', pid), from_ = p):
+        output(pid, 'says Hello!')
+
+def main():
+    num_procs = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+    procs = new(P, num = num_procs)
+    for p in procs:
+        setup(p, (procs - {p}, ))
+    start(procs)
+
