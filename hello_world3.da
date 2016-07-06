@@ -1,0 +1,12 @@
+class P (process):
+    def setup():
+        pass
+
+    def run():
+        output('Hello World from: ', self.id)
+        
+def main():
+    num_processes = 2
+    p = new(P, num = num_processes)
+    setup(p, ())
+    start(p)

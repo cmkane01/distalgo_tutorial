@@ -1,0 +1,19 @@
+class P (process):
+    def setup(processes):
+        pass
+
+    def run():
+        for p in processes:
+            send(('hello', self.id), to = p)
+        -- rcv_greeting
+        await(False)
+
+    def receive(msg=('hello', self.id), from_ = greeter):
+        output(greeter, 'says Hello to', self.id)
+        
+def main():
+    num_processes = 2
+    ps = new(P, num = num_processes)
+    for p in ps:
+        setup(p, (ps - {p}, ))
+    start(ps)
