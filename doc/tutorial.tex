@@ -1,0 +1,76 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{amssymb}
+
+
+\lstset{basicstyle=\footnotesize, numbers=left, numberstyle=\footnotesize,
+  stepnumber=1, numbersep=5pt, captionpos=b, frame=single,
+  showstringspaces=false}
+
+\begin{document}
+
+DistAlgo is a high-level language for writing distributed algorithms, such that
+they serve as both clear specifications and runnable implementations of those
+algorithms. This document provides a brief, practical introduction to the major
+features of the language using several iterations of a familiar example.
+
+DistAlgo is currently implemented as an extension of the Python language, and
+requires Python 3.4 or higher. This tutorial assumes some familiarity with
+Object-Oriented programming in general, and with Python, in particular.
+
+Let's begin with the simplest possible version of ``Hello World'' written in
+DistAlgo.
+
+\lstset{language={python}, morekeywords={send, sent, received, each, some,
+    await, new, setup, start, run, process}}
+
+\begin{lstlisting}[caption={Hello World 01 - Main Function Definition}, label={lst:hw01}]
+    def main():
+        print('Hello World.')
+\end{lstlisting}
+
+Every DistAlgo program must have a main function. In this case, the body of
+\texttt{main} merely contains a call to Python's print function, to output
+``Hello World'' to standard output. As we will see in the next example, the
+inteded use of the main function in a DistAlgo program is to create, prepare,
+and then begin the execution of the distinct processes that participate in the
+distributed algorithm.
+
+In the second version of ``Hello World'' we can see how process definition and
+creation works in a DistAlgo program.
+
+\begin{lstlisting}[caption={Hello World 02 - Process Definition}, label={lst:hw02}]
+  class P (process):
+      def setup(name):
+          pass
+
+      def run():
+          output('Hello World from: ', self.name)
+
+  def main():
+      p = new(P)
+      setup(p, 'bob',))
+      start(p)
+\end{lstlisting}
+
+Distributed algorithms are constituted by the interaction of multiple, distinct
+processes. DistAlgo is intended for the implementation of distributed
+algorithms. To that end, DistAlgo makes it easy to define new process types
+that will execute the behavior required by the algorithm.
+
+Every user defined process type in DistAlgo is an extension of the base class
+\texttt{process}. In the second version of ``Hello World'' we define a class
+called \texttt{P}, which extends \textt{process}. In order to properly define
+a new type of DistAlgo process, the user must define two functions:
+\texttt{setup} and \texttt{run}.
+
+The \texttt{setup} method is used to declare and initialize any instance
+variables of the user's new process class. Any parameters of the setup method
+are implicitly declared as instance variables and initialized with the value
+passed as the argument to the parameter. In the second example, \texttt{setup}
+has one parameter \texttt{name}, which is initialized with the value
+\texttt{'bob'}. 
+\end{document}
+
