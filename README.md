@@ -1,7 +1,8 @@
 DistAlgo Tutorial:
 
 This repository will host a short, practical introduction to the DistAlgo
-language.
+language: a language designed for high-level implementation of distributed
+algorithms.
 
 This is mostly practice for writing introductory tutorials for new languages. I
 am not the creator or maintainer of DistAlgo. DistAlgo is the work of Bo Lin,
