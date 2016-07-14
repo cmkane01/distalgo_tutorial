@@ -1,12 +1,12 @@
 class P (process):
-    def setup():
+    def setup(name):
         pass
 
     def run():
-        output('Hello World from: ', self.id)
+        output('Hello World from:', name, ', AKA:', self.id)
         
 def main():
     num_processes = 2
-    p = new(P, num = num_processes)
-    setup(p, ())
-    start(p)
+    ps = new(P, num = num_processes)
+    setup(ps, ('bob', ))
+    start(ps)

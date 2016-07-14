@@ -26,12 +26,12 @@ DistAlgo.
 \lstset{language={python}, morekeywords={send, sent, received, each, some,
     await, new, setup, start, run, process}}
 
-\begin{lstlisting}[caption={Hello World 01 - Main Function Definition}, label={lst:hw01}]
+\begin{lstlisting}[caption={hello\_world01.da - Main Function Definition}, label={lst:hw01}]
     def main():
         print('Hello World.')
 \end{lstlisting}
 
-Every DistAlgo program must have a main function. In this case, the body of
+\noindent Every DistAlgo program must have a main function. In this case, the body of
 \texttt{main} merely contains a call to Python's print function, to output
 ``Hello World'' to standard output. As we will see in the next example, the
 inteded use of the main function in a DistAlgo program is to create, prepare,
@@ -41,28 +41,28 @@ distributed algorithm.
 In the second version of ``Hello World'' we can see how process definition and
 creation works in a DistAlgo program.
 
-\begin{lstlisting}[caption={Hello World 02 - Process Definition}, label={lst:hw02}]
+\begin{lstlisting}[caption={hello\_world02.da - Process Definition}, label={lst:hw02}]
   class P (process):
       def setup(name):
           pass
 
       def run():
-          output('Hello World from: ', self.name)
+          output('Hello World from:', self.name, ', AKA:', self.id)
 
   def main():
-      p = new(P)
-      setup(p, 'bob',))
-      start(p)
+      ps = new(P)
+      setup(ps, ('bob',))
+      start(ps)
 \end{lstlisting}
 
-Distributed algorithms are constituted by the interaction of multiple, distinct
+\noindent Distributed algorithms are constituted by the interaction of multiple, distinct
 processes. DistAlgo is intended for the implementation of distributed
 algorithms. To that end, DistAlgo makes it easy to define new process types
 that will execute the behavior required by the algorithm.
 
 Every user defined process type in DistAlgo is an extension of the base class
 \texttt{process}. In the second version of ``Hello World'' we define a class
-called \texttt{P}, which extends \textt{process}. In order to properly define
+called \texttt{P}, which extends \texttt{process}. In order to properly define
 a new type of DistAlgo process, the user must define two functions:
 \texttt{setup} and \texttt{run}.
 
@@ -71,6 +71,78 @@ variables of the user's new process class. Any parameters of the setup method
 are implicitly declared as instance variables and initialized with the value
 passed as the argument to the parameter. In the second example, \texttt{setup}
 has one parameter \texttt{name}, which is initialized with the value
-\texttt{'bob'}. 
-\end{document}
+\texttt{'bob'}. In addition, every instance of a distalgo process has a unique
+identifier stored in an instance variable, \texttt{self.id}, which is the pair
+of the IP address and the port number upon which the process instance is
+listening.
 
+The \texttt{run} method of a DistAlgo process contains the definition of the
+behavior of the process. For the example in listing 2, the process merely
+prints a ``Hello World'' message, identifying itself using both the name we
+supplied as an argument and its unique id.
+
+In this second example we can also see a proper use of the \texttt{main} method
+of a DistAlgo program. Here we have calls to three Distalgo methods:
+\texttt{new}, \texttt{setup}, and \texttt{start}.
+
+The \texttt{new} method is used to instantiate a set of DistAlgo process
+instances. We supply the classname of the process class we wish to instantiate,
+\texttt{P}, as an argument, and \texttt{new} returns a set of references to the
+new process instances. In this case we store the set in the variable
+\texttt{ps}.  If the class name is the only argument, then \texttt{new} creates
+just one instance of that process class. However, even if \texttt{new} is used
+to create just once process instance, the returned value is still a set--in
+this case a singleton set--containing a reference to that process instance.
+
+The \texttt{setup} method is used to initialize our new process instances. The
+first argument is a set of process instance references. The second argument is
+a tuple of arguments to be passed to the parameters of the \texttt{setup}
+method defined for the process class corresponding to the class of the process
+instances one is trying to initialize. Note, even if there is only one argument
+passed to the \texttt{setup} method of the process class, it must still be
+packaged within a singleton tuple.
+
+Finally, we can begin the execution of the process instances by passing a set
+of references to those process instances to the \texttt{start} method. The call
+to \texttt{start} will cause the \texttt{run} method defined within the
+corresponding process class to begin executing at each process instance
+included in the call to \texttt{start}.
+
+In the third example, we can see how multiple process instances are created.
+
+\begin{lstlisting}[caption={hello\_world03.da - Multiple Process Instances}, label={lst:hw03}]
+  class P (process):
+      def setup(name):
+          pass
+
+      def run():
+          output('Hello World from:', name, ', AKA:', self.id)
+
+  def main():
+      num_processes = 2
+      ps = new(P, num = num_processes)
+      setup(ps, ('bob', ))
+      start(ps)
+
+\end{lstlisting}
+
+\noindent You can run this program from the command line by entering:
+``python3 -m da hello\_world3.da''.
+
+This program is very similar to ``hello\_world2.da''. In fact, the definition of
+the process class, \texttt{P}, is identical to the one given in the previous
+example. There are just two changes in \texttt{main}. First, we add a new
+variable, \texttt{num\_processes}, which is initialized to $2$. Second, we pass
+this new variable as the argument to the \texttt{num} parameter of the
+\texttt{new} method, resulting in the instantiation of two process instances of
+the process class, \texttt{P}. These two instances are both initialized by the
+call to \texttt{setup}, and then set running by the call to \texttt{start}.
+
+The instantiation and execution of the two process instances can be observed in
+the output when the program is run. There will be two ``Hello World'' outputs,
+each with a distinct value for \texttt{self.id}, though both will claim that
+their name is 'bob', since they are both inititialized with the same parameter.
+You should think about how you might initialize the \texttt{name} fields of
+these two process instances with distinct values.
+
+\end{document}

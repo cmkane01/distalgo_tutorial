@@ -1,11 +1,11 @@
 class P (process):
-    def setup():
+    def setup(name):
         pass
 
     def run():
-        output('Hello World from: ', self.id)
+        output('Hello World from:', self.name, ', AKA:', self.id)
         
 def main():
-    p = new(P)
-    setup(p, ())
-    start(p)
+    ps = new(P)
+    setup(ps, ('bob', ))
+    start(ps)
