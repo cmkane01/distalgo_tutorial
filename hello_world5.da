@@ -10,5 +10,9 @@ class P (process):
 def main():
     num_processes = 2
     ps = new(P, num = num_processes)
+<<<<<<< HEAD
     setup(ps, (ps,))
+=======
+    setup(ps, (p,))
+>>>>>>> d82512d7d0b2bd167cb7dc106d298bcec3488038
     start(ps)
