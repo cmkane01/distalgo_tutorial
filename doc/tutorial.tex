@@ -145,4 +145,90 @@ their name is 'bob', since they are both inititialized with the same parameter.
 You should think about how you might initialize the \texttt{name} fields of
 these two process instances with distinct values.
 
+This latest version of hello\_world features two DistAlgo process instances,
+but they do not interact with or even refer to each other. Distributed
+algorithms are intended to feature this sort of interplay between distinct
+processes, so let's add some in the next example.
+
+Here is the fourth example:
+
+\begin{lstlisting}[caption={hello\_world04.da - Multiple Processes Referring to Each Other}, label={lst:hw04}]
+class P (process):
+    def setup(processes):
+        pass
+
+    def run():
+        for p in processes:
+            output(self.id, 'says Hello to: ', p)
+
+def main():
+    num_processes = 2
+    ps = new(P, num = num_processes)
+    setup(ps, (ps,))
+    start(ps)  
+\end{lstlisting}
+
+\noindent You can run this program from the command line by entering:
+``python3 -m da hello\_world04.da''. There are several changes to the program.
+First, we have altered the definition of the \texttt{setup} method so that it
+accepts parameter, \texttt{processes}, which will hold a set of references to
+DistAlgo process instances. Next, we have altered the the \texttt{run} method
+of \texttt{P} so that instead of greeting the entire world, it instead loops
+over all the process instances in \texttt{processes} and sends each of them
+an individualized greeting, <process id> says Hello to <process id>. 
+
+Within the main method we generate two distinct process instances of type
+\texttt{P}, and store the set of their references in texttt{ps}. We then
+initialize both instances passing that same set of references to \texttt{setup}
+to serve as the argument to texttt{processes}. Finally, we start those process
+instances running as before.
+
+If you run the program then you will see that in the ouput there are four
+``X say Hello to Y''. If we label the two process instances, $p1$ and $p2$,
+then the four greetings have the following forms: i) ``p1 says Hello to p1'';
+ii) ``p1 says Hello to p2''; iii) ``p2 says Hello to p1'';
+iv) ``p2 says Hello to p2'', in some arbitrary order. But, we probably did not
+intend to have the processes greeting themselves. So what went wrong?
+
+The problem occurs on line 12. We passed the entire set ps to the
+\texttt{processes} parameter of \texttt{P} for each process instance, but there
+is a reference to that process instance in the set \texttt{ps}. So, each ends
+up with a \texttt{processes} set that contains a reference to itself. How can
+we avoid this?
+
+It turns out there is a common pattern present in many DistAlgo examples that
+allows one to initialize a process with a set of references to other process
+instances, but exclude a reference to the process instance one is attempting to
+initialize. It is illustrated in Example 6:
+
+\begin{lstlisting}[caption={hello\_world06.da - Excluding Self-References, the Nice Way}, label={lst:hw06}]
+class P (process):
+    def setup(processes):
+        pass
+
+    def run():
+        for p in processes:
+        output(self.id, 'says Hello to: ', p)
+
+def main():
+    num_processes = 2
+    ps = new(P, num = num_processes)
+    for p in ps:
+        setup(p, (ps - {p}, ))
+    start(ps)
+\end{lstlisting}
+
+The only difference between Example 6 and Example 4 occurs inside the call to
+the \texttt{setup} method within main. We initialize each of the process
+instances one at a time within a loop. For each process instance, instead of
+passing the entire set \texttt{ps} to the \texttt{processes} paramter of
+\texttt{P}, we instead pass the set produced taking the difference of
+\texttt{ps} with a singlton set that contains a reference to the process
+instance being initialized. Thus, each process instance is set up with a set of
+refereces to every other process instance in \texttt{ps}.
+
+If you run Example 6 by entering ``python3 -m da hello\_world06.da'', then you
+will see that there now only two outputs. $p1$ greets $p2$, and $p2$ greets
+$p1$. All is once again right with the world. Each process instance greets the
+other
 \end{document}
