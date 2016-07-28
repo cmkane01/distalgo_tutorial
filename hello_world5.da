@@ -9,6 +9,6 @@ class P (process):
         
 def main():
     num_processes = 2
-    p = new(P, num = num_processes)
-    setup(p, (p,))
-    start(p)
+    ps = new(P, num = num_processes)
+    setup(ps, (ps,))
+    start(ps)
