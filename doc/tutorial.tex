@@ -230,5 +230,15 @@ refereces to every other process instance in \texttt{ps}.
 If you run Example 6 by entering ``python3 -m da hello\_world06.da'', then you
 will see that there now only two outputs. $p1$ greets $p2$, and $p2$ greets
 $p1$. All is once again right with the world. Each process instance greets the
-other
+other without also greeting itself.
+
+There are many examples of DistAlgo programs in which set difference is used in
+this way to create a set of processes that includes all the processes in a set
+to which the current process belongs, but which excludes the current process.
+This is not surprising. Process classes define instances that will interact
+with each other, but they do not usually need to interact with themselves. It
+would be ugly to check the identity of the process the current instance is
+attempting to interact with to verify that it is not unnecessarily
+communicating with itself. Using set difference in this way lets us avoid all
+that ugliness.
 \end{document}
