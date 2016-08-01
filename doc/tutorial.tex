@@ -196,6 +196,43 @@ is a reference to that process instance in the set \texttt{ps}. So, each ends
 up with a \texttt{processes} set that contains a reference to itself. How can
 we avoid this?
 
+One way to address this problem is to prevent a process instance from
+contacting itself while it executes its \texttt{run} method. We can do this
+with a conditional, as illustrated in Example 5:
+
+\begin{lstlisting}[caption={hello\_world05.da - Excluding Self-References, the Ugly Way}, label={lst:hw05}]
+  class P (process):
+      def setup(processes):
+          pass
+
+      def run():
+          for p in processes:
+              if p != self.id:
+                  output(self.id, 'says Hello to: ', p)
+
+  def main():
+      num_processes = 2
+      ps = new(P, num = num_processes)
+      setup(ps, (ps,))
+      start(ps)
+\end{lstlisting}
+
+The only change made from Example 4 is the insertion of an \texttt{if}
+statement within the loop of the \texttt{run} method that sends the greetings
+to the processes in the set \texttt{processes}. This \texttt{if} only allows
+the process instance to execute the \texttt{output} statement if the process id
+contained in the loop control variable, \texttt{p}, is distinct from the
+process id of the process instance executing the code (\texttt{self.id}).
+
+Adding this conditional statement solves our problem, but it does so in a crude
+and inefficient manner. Real distriubted algorithms will involve more
+complicated and more numerous interactions between process instances. In order
+to ensure that a process never attempted to unecessarily interact with itself
+each interaction statement in the program would have to be guarded by a
+conditional like this one. That is many extra lines of code that need to be
+carefully checked to guarantee you have not damaged the control logic of the
+program. We need a better solution than this.
+
 It turns out there is a common pattern present in many DistAlgo examples that
 allows one to initialize a process with a set of references to other process
 instances, but exclude a reference to the process instance one is attempting to
