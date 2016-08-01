@@ -6,8 +6,8 @@ class P (process):
         for p in processes:
             send(('hello', self.id), to = p)
 
-    def receive(msg=('hello', self.id), from_ = greeter):
-        output(greeter, 'says Hello to', self.id)
+    def receive(msg=('hello', pid), from_ = greeter):
+        output(pid, 'says Hello to', self.id)
         
 def main():
     num_processes = 2

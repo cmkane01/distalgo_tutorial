@@ -20,6 +20,8 @@ DistAlgo is currently implemented as an extension of the Python language, and
 requires Python 3.4 or higher. This tutorial assumes some familiarity with
 Object-Oriented programming in general, and with Python, in particular.
 
+\section{Main}
+
 Let's begin with the simplest possible version of ``Hello World'' written in
 DistAlgo.
 
@@ -37,6 +39,8 @@ DistAlgo.
 inteded use of the main function in a DistAlgo program is to create, prepare,
 and then begin the execution of the distinct processes that participate in the
 distributed algorithm.
+
+\section{Processes}
 
 In the second version of ``Hello World'' we can see how process definition and
 creation works in a DistAlgo program.
@@ -217,7 +221,7 @@ with a conditional, as illustrated in Example 5:
       start(ps)
 \end{lstlisting}
 
-The only change made from Example 4 is the insertion of an \texttt{if}
+\noindent The only change made from Example 4 is the insertion of an \texttt{if}
 statement within the loop of the \texttt{run} method that sends the greetings
 to the processes in the set \texttt{processes}. This \texttt{if} only allows
 the process instance to execute the \texttt{output} statement if the process id
@@ -278,4 +282,106 @@ would be ugly to check the identity of the process the current instance is
 attempting to interact with to verify that it is not unnecessarily
 communicating with itself. Using set difference in this way lets us avoid all
 that ugliness.
+
+\section{Process Interaction}
+
+So far we have seen how to define the process classes that will play the roles
+in the distributed algorithm we are attempting to specify. However, distributed
+algorithms require these roles to interact by sending and receiving messages
+among each other. In this section we will introduce the DistAlgo constructs
+that enable process instances to send messages to and receive messages from
+each other.
+
+Here is Example 7:
+\begin{lstlisting}[caption={hello\_world07.da - Send}, label={lst:hw07}]
+  class P (process):
+      def setup(processes):
+          pass
+
+      def run():
+          for p in processes:
+              send(('hello', self.id), to = p)
+
+  def main():
+      num_processes = 2
+      ps = new(P, num = num_processes)
+      for p in ps:
+          setup(p, (ps - {p}, ))
+      start(ps)
+\end{lstlisting}
+
+\noindent This program, ``hello_world07.da'' is basically identical to the
+program given in Example 6. The only difference is the statement inside the
+\texttt{for} loop inside the \texttt{run} method of process \texttt{P}, where
+we have replaced the \texttt{output} statement with a new kind of statement
+\texttt{send}.
+
+The \texttt{send} method is available to every class that subclasses the
+DistAlgo \texttt{process} class. The \texttt{send} method take two arguments.
+The first argument is the content of the message to be sent. This is typically
+a tuple of various values. By convention, the first value in the tuple is a
+string used as a tag for the message--it identifies the type of message being
+sent. In this example, we have tagged the message in the \texttt{send} with the
+value \texttt{'hello'}. This will let the recipient know that it is a greeting
+message.
+
+The second argument, prefaced by ``\texttt{to=}'', is the process id of
+the process instance that is the intended recipient of the message. The sending
+process instance will open a socket to the stated recipient process using its
+id (recall that a process id is a tuple of the ip address and port number upon
+which that process is listening for incoming connections).
+
+If we run this program with the command ``python3 -m da hello_world07.da'',
+then you will see that there is no observable output. What has happened? The
+problem is that sending messages is only half of the work we need to do in
+order to make these process instances genuinely interact. We also need to
+specify what a process instance should do when it \textit{receives} a message
+with a \texttt{'hello'} tag.
+
+This leads us to Example 8:
+\begin{lstlisting}[caption={hello\_world08.da - Receive Handler}, label={lst:hw08}]
+  class P (process):
+      def setup(processes):
+          pass
+
+      def run():
+          for p in processes:
+              send(('hello', self.id), to = p)
+
+      def receive(msg=('hello', pid), from_ = greeter):
+          output(greeter, 'says Hello to', self.id)
+
+  def main():
+      num_processes = 2
+      ps = new(P, num = num_processes)
+      for p in ps:
+          setup(p, (ps - {p}, ))
+      start(ps)
+\end{lstlisting}
+
+\noindent The program in Example 8 is derived from the program in Example 7 by adding a
+single new construct. This is the receive handler. In the Python implementation
+of DistAlgo a receive handler is the definition of a method \texttt{def
+  receive()}. The parameters of the \texttt{receive} method determine the
+content of the message it is intended to receive and the identity of the
+sender. In particular, the first parameter--the \texttt{msg=} parameter--
+defines a pattern that a message must match in order to activate the body of
+the receive handler. The body of the \texttt{receive} method determines the
+behavior of the process instance upon receiving such a message.
+
+In Example 8, the receive handler pattern includes the literal string tag
+'hello' and another an additional parameter, \texttt{pid}. Thus, this receive
+handler will be activated by the receipt of any message whose first value is
+the string 'hello', and which has only one other value. That second value will
+be assigned to the variable \texttt{pid} so that it can be used within the body
+of the receive handler.
+
+Observe that this exactly matches the structure of the message that is being
+sent in the \texttt{run} method above. This is intentional. In order for sent
+messages to be handled correctly, the pattern defined for the \texttt{msg=}
+parameter must be able to match the structure and tag of the content of the
+sent message. If the message we sent had contained a different tag, or a
+different number of additional values, then there would be no match and the
+body of this receive handler would not execute. 
+
 \end{document}

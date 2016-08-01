@@ -7,8 +7,8 @@ class P (process):
             send(('hello', self.id), to = p)
         -- rcv_greeting
 
-    def receive(msg=('hello', self.id), from_ = greeter):
-        output(greeter, 'says Hello to', self.id)
+    def receive(msg=('hello', pid), from_ = greeter):
+        output(pid, 'says Hello to', self.id)
         
 def main():
     num_processes = 2
