@@ -370,11 +370,15 @@ the receive handler. The body of the \texttt{receive} method determines the
 behavior of the process instance upon receiving such a message.
 
 In Example 8, the receive handler pattern includes the literal string tag
-'hello' and another an additional parameter, \texttt{pid}. Thus, this receive
+'hello' and an additional parameter, \texttt{pid}. Thus, this receive
 handler will be activated by the receipt of any message whose first value is
 the string 'hello', and which has only one other value. That second value will
 be assigned to the variable \texttt{pid} so that it can be used within the body
-of the receive handler.
+of the receive handler. (Note: it is expected that the argument to the 
+\texttt{pid} parameter will be a DistAlgo process instance id, but this will
+not be enforced by Python's dynamic typing system. If the type of the parameter
+matters in your program you will have to enforce it manually in the receive
+handler body.)
 
 Observe that this exactly matches the structure of the message that is being
 sent in the \texttt{run} method above. This is intentional. In order for sent
@@ -382,6 +386,52 @@ messages to be handled correctly, the pattern defined for the \texttt{msg=}
 parameter must be able to match the structure and tag of the content of the
 sent message. If the message we sent had contained a different tag, or a
 different number of additional values, then there would be no match and the
-body of this receive handler would not execute. 
+body of this receive handler would not execute.
 
+So, let's run this version of the hello_world program by entering: 
+``python3 -m da hello_world08.da'', and observe the results. Except, once again
+nothing appears to happen. What has gone wrong? Nothing has gone wrong, but we 
+need to consider more carefully how message handling in a language built for
+distributed algorithms should work.
+
+It cannot be the case that messages can be handled at any point during program 
+execution. Consider the possibility that the execution of the body of the 
+\texttt{run} method (or, code at other locations in the program) may depend
+upon values that can be altered by the receipt of incoming messages. If 
+multiple incoming messages are handled willy-nilly, then these values can be
+changed before the computations that depend upon them can be fully evaluated.
+Message handling may interfere and ruin the execution of our program if it is
+not constrained in some way.
+
+The solution in DistAlgo is to introduce particular locations within the code
+at which incoming messages (if any) may be handled. These locations are called
+yield points and they are declared within the program using labels. In order to
+understand what you are doing when you include a label recognize that the code
+between two labels is treated as atomic--that code will complete execution 
+without any interruption by messaging events included in the distributed 
+algorithm. It is important to keep this faux atomicity when deciding where to 
+place labels in your program.
+
+In Example 9 we add a label to our hello_world program to handle ensure the
+greeting message gets handled. Here it is:
+\begin{lstlisting}[caption={hello\_world09.da - Yield Points}, label={lst:hw09}]
+class P (process):
+    def setup(processes):
+        pass
+
+    def run():
+        for p in processes:
+            send(('hello', self.id), to = p)
+        -- rcv_greeting
+
+    def receive(msg=('hello', pid), from_ = greeter):
+        output(pid, 'says Hello to', self.id)
+        
+def main():
+    num_processes = 2
+    ps = new(P, num = num_processes)
+    for p in ps:
+        setup(p, (ps - {p}, ))
+    start(ps)
+\end{lstlisting}
 \end{document}
