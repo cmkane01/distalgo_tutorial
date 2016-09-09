@@ -310,7 +310,7 @@ Here is Example 7:
       start(ps)
 \end{lstlisting}
 
-\noindent This program, ``hello_world07.da'' is basically identical to the
+\noindent This program, ``hello\_world07.da'' is basically identical to the
 program given in Example 6. The only difference is the statement inside the
 \texttt{for} loop inside the \texttt{run} method of process \texttt{P}, where
 we have replaced the \texttt{output} statement with a new kind of statement
@@ -331,7 +331,7 @@ process instance will open a socket to the stated recipient process using its
 id (recall that a process id is a tuple of the ip address and port number upon
 which that process is listening for incoming connections).
 
-If we run this program with the command ``python3 -m da hello_world07.da'',
+If we run this program with the command ``python3 -m da hello\_world07.da'',
 then you will see that there is no observable output. What has happened? The
 problem is that sending messages is only half of the work we need to do in
 order to make these process instances genuinely interact. We also need to
@@ -388,8 +388,8 @@ sent message. If the message we sent had contained a different tag, or a
 different number of additional values, then there would be no match and the
 body of this receive handler would not execute.
 
-So, let's run this version of the hello_world program by entering: 
-``python3 -m da hello_world08.da'', and observe the results. Except, once again
+So, let's run this version of the hello\_world program by entering: 
+``python3 -m da hello\_world08.da'', and observe the results. Except, once again
 nothing appears to happen. What has gone wrong? Nothing has gone wrong, but we 
 need to consider more carefully how message handling in a language built for
 distributed algorithms should work.
@@ -409,10 +409,10 @@ yield points and they are declared within the program using labels. In order to
 understand what you are doing when you include a label recognize that the code
 between two labels is treated as atomic--that code will complete execution 
 without any interruption by messaging events included in the distributed 
-algorithm. It is important to keep this faux atomicity when deciding where to 
-place labels in your program.
+algorithm. It is important to keep this faux atomicity in mind when deciding
+where to place labels in your program.
 
-In Example 9 we add a label to our hello_world program to handle ensure the
+In Example 9 we add a label to our hello\_world program to handle ensure the
 greeting message gets handled. Here it is:
 \begin{lstlisting}[caption={hello\_world09.da - Yield Points}, label={lst:hw09}]
 class P (process):
@@ -434,4 +434,53 @@ def main():
         setup(p, (ps - {p}, ))
     start(ps)
 \end{lstlisting}
+
+Try running this program several times. You should notice that something is
+amiss. Most of the time you will see that the process instances exchange
+greeting messages. However, on some runs of the program, only one of the
+greeting  messages gets output. This is because only one of the greeting
+messages is handled by its recipient. Why does this happen?
+
+Network communication can take an arbitrary amount of time to complete.  You
+cannot count on messages arriving in a timely fashion in your algorithm (at
+least, not without doing a lot more work). In the runs featuring the missing
+output, the process instance that fails to handle the message reaches the label
+\texttt{--rcv\_greeting} before the greeting message actually arrives. Since
+there are no messages waiting when it reaches the label, there is nothing to
+handle, and so the receive handler is not invoked. The execution falls through
+past the label, and since there is no further code in the \texttt{run} method
+the process instance completes execution and ends.
+
+In order to gain more control over process interaction we need to do more than
+merely create opportunities for one process instance to handle messages that
+may have arrived from the other. We need to synchronize the behavior of the
+two processes to create genuine interaction in this case. We will accomplish
+this by using the \texttt{await} keyword. Declaring an await statment will
+allow us to halt the progress of the \texttt{run} function while we wait for
+some specified condition to obtain.
+
+We can see how this is applied to the present problem by looking at Example 10:
+
+\begin{lstlisting}[caption={hello\_world10.da - Synchronizing with Await Statements}, label={lst:hw10}]
+class P (process):
+    def setup(processes):
+        pass
+
+    def run():
+        for p in processes:
+            send(('hello', self.id), to = p)
+        -- rcv_greeting
+        await(False)
+
+def receive(msg=('hello', self.id), from_ = greeter):
+    output(greeter, 'says Hello to', self.id)
+
+def main():
+    num_processes = 2
+    ps = new(P, num = num_processes)
+    for p in ps:
+        setup(p, (ps - {p}, ))
+    start(ps)
+\end{lstlisting}
+
 \end{document}
